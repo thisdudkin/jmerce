@@ -1,0 +1,31 @@
+@startuml
+!NEW_C4_STYLE=1
+!include <C4/C4_Context>
+
+LAYOUT_LEFT_RIGHT()
+
+Person(customer, "Customer", "Anonymous or authenticated marketplace customer.")
+Person(seller, "Seller", "Third-party marketplace seller.")
+Person(administrator, "Administrator", "Marketplace administrator.")
+
+System(jmerce, "JMerce", "Cloud-native distributed e-commerce platform.")
+
+System_Ext(keycloak, "Identity Provider", "Keycloak.")
+System_Ext(paymentProvider, "Payment Provider", "External payment-service contract.")
+System_Ext(carrierProvider, "Carrier Provider", "External shipping/carrier contract.")
+
+Rel(customer, jmerce, "Browses catalog, searches products, manages cart, places and tracks orders", "HTTPS / REST")
+Rel(customer, keycloak, "Authenticates when required", "OAuth 2.0 / OpenID Connect")
+
+Rel(seller, jmerce, "Manages seller profile, catalog products, listings, prices, inventory and orders", "HTTPS / REST")
+Rel(seller, keycloak, "Authenticates", "OAuth 2.0 / OpenID Connect")
+
+Rel(administrator, jmerce, "Performs marketplace administration and operational activities", "HTTPS / REST")
+Rel(administrator, keycloak, "Authenticates and manages identities", "OAuth 2.0 / OpenID Connect")
+
+Rel(jmerce, keycloak, "Validates identity; obtains service credentials; manages customer identity lifecycle", "OAuth 2.0 / OIDC / Admin API")
+Rel(jmerce, paymentProvider, "Authorizes, captures, voids and refunds payments; reconciles uncertain payment outcomes", "HTTPS")
+Rel(jmerce, carrierProvider, "Creates and manages shipments and obtains tracking information", "HTTPS")
+
+SHOW_LEGEND()
+@enduml
