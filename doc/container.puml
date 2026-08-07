@@ -1,0 +1,176 @@
+@startuml
+!NEW_C4_STYLE=1
+!include <C4/C4_Container>
+
+Person(customer, "Customer", "Anonymous or authenticated marketplace customer.")
+Person(seller, "Seller", "Third-party marketplace seller.")
+Person(administrator, "Administrator", "Third-Operates and administers the marketplace and its identities.")
+
+System_Ext(keycloak, "Keycloak", "Identity Provider.\nOwns subjects, credentials, authentication, roles, OAuth 2.0/OIDC clients and sessions.")
+System_Ext(paymentProvider, "Payment Provider", "Generic PSP integration.\nWireMock implementation.")
+System_Ext(carrierProvider, "Carrier Provider", "Generic carrier integration.\nWireMock implementation.")
+
+System_Boundary(jmerce, "jmerce") {
+    Container(gateway, "API Gateway", "Envoy Gateway", "Single public entry point. Performs routing, TLS termination, edge policies and coarse-grained traffic control.")
+
+    Container_Boundary(applicationServices, "Application Services") {
+        Container(customerService, "Customer Service", "Spring Boot", "Owns customer business profiles, addresses, customer lifecycle and Keycloak profile synchronization.")
+        Container(sellerService, "Seller Service", "Spring Boot", "Owns seller onboarding, seller profile, marketplace status and eligibility.")
+        Container(catalogService, "Catalog Service", "Spring Boot", "Owns canonical products, categories, attributes and product lifecycle.")
+        Container(listingService, "Listing Service", "Spring Boot", "Owns seller-specific marketplace listings, SKUs, listing lifecycle and prices in USD, EUR and RUB.")
+        Container(inventoryService, "Inventory Service", "Spring Boot", "Owns warehouses, stock, available-to-sell quantities, reservations, reservation expiration and stock commits.")
+        Container(cartService, "Cart Service", "Spring Boot", "Owns authenticated and anonymous shopping carts, cart lines, currency and anonymous-to-authenticated cart merge.")
+        Container(orderService, "Order Service", "Spring Boot", "Owns orders and checkout state. Acts as the orchestrator of the distributed checkout Saga.")
+        Container(paymentService, "Payment Service", "Spring Boot", "Owns payment attempts and payment state. Implements the PaymentProvider outbound port.")
+        Container(fulfillmentService, "Fulfillment Service", "Spring Boot", "Owns fulfilment groups, warehouse allocation, shipments, shipment items and tracking lifecycle.")
+        Container(searchService, "Search Service", "Spring Boot", "Builds and serves a denormalized product/search read model derived from domain events.")
+    }
+
+    Container_Boundary(messaging, "Messaging & Contracts") {
+        Container(kafka, "Kafka", "Apache Kafka / KRaft", "Asynchronous integration backbone for domain events, Saga commands and Saga outcomes. Delivery is at-least-once.")
+        Container(schemaRegistry, "Schema Registry", "Apicurio Registry", "Governs Avro event contracts and Protobuf contracts. FULL_TRANSITIVE compatibility by default.")
+
+        ContainerDb(schemaRegistryDb, "Apicurio Postgres", "PostgreSQL", "Stores Apicurio Registry artifacts and metadata.")
+    }
+
+    Container_Boundary(serviceData, "Service-owned Data Storages") {
+        ContainerDb(customerDb, "Customer Postgres", "PostgreSQL", "Authoritative customer-service database.")
+        ContainerDb(sellerDb, "Seller Postgres", "PostgreSQL", "Authoritative seller-service database.")
+        ContainerDb(catalogDb, "Catalog Postgres", "PostgreSQL", "Authoritative catalog-service database.")
+        ContainerDb(listingDb, "Listing Postgres", "PostgreSQL", "Authoritative listing-service database.")
+        ContainerDb(inventoryDb, "Inventory Postgres", "PostgreSQL", "Authoritative inventory-service database.")
+        ContainerDb(cartDb, "Cart Postgres", "PostgreSQL", "Authoritative storage for authenticated carts.")
+        ContainerDb(cartRedis, "Cart Redis", "Redis", "Anonymous carts and justified hot-cart caching.")
+        ContainerDb(orderDb, "Order Postgres", "PostgreSQL", "Authoritative order state, Saga state and order outbox/inbox.")
+        ContainerDb(paymentDb, "Payment Postgres", "PostgreSQL", "Authoritative payment attempts, provider state and idempotency records.")
+        ContainerDb(fulfillmentDb, "Fulfillment Postgres", "PostgreSQL", "Authoritative fulfilment, shipment and tracking state.")
+        ContainerDb(opensearch, "OpenSearch", "OpenSearch", "Disposable and rebuildable search projection. Never an authoritative source of commerce data.")
+    }
+
+    Container_Boundary(observability, "Observability") {
+        Container(otelCollector, "OpenTelemetry Collector", "OpenTelemetry", "Receives, processes and exports distributed traces.")
+        Container(prometheus, "Prometheus", "Prometheus", "Scrapes and stores application and infrastructure metrics.")
+        Container(grafana, "Grafana", "Grafana", "Provides dashboards and exploration for metrics, logs and traces.")
+        Container(alloy, "Grafana Alloy", "Grafana Alloy", "Collects structured container logs and forwards them to Loki.")
+
+        ContainerDb(loki, "Loki", "Grafana Loki", "Stores structured application and infrastructure logs.")
+        ContainerDb(tempo, "Tempo", "Grafana Tempo", "Stores distributed traces.")
+    }
+}
+
+Rel(customer, keycloak, "Authenticates when required", "OAuth 2.0 / OIDC + PKCE")
+Rel(seller, keycloak, "Authenticates", "OAuth 2.0 / OIDC + PKCE")
+Rel(administrator, keycloak, "Authenticates", "OAuth 2.0 / OIDC")
+
+Rel(customer, gateway, "Uses customer-facing marketplace APIs", "HTTPS / REST / JSON")
+Rel(seller, gateway, "Uses seller-facing marketplace APIs", "HTTPS / REST / JSON")
+Rel(administrator, gateway, "Uses administrative APIs", "HTTPS / REST / JSON")
+
+Rel(gateway, customerService, "Routes customer profile and address API", "HTTP / REST")
+Rel(gateway, sellerService, "Routes seller API", "HTTP / REST")
+Rel(gateway, catalogService, "Routes product and category API", "HTTP / REST")
+Rel(gateway, listingService, "Routes listing and pricing API", "HTTP / REST")
+Rel(gateway, inventoryService, "Routes seller inventory and warehouse API", "HTTP / REST")
+Rel(gateway, cartService, "Routes cart API", "HTTP / REST")
+Rel(gateway, orderService, "Routes checkout and order API", "HTTP / REST")
+Rel(gateway, fulfillmentService, "Routes shipment tracking API", "HTTP / REST")
+Rel(gateway, searchService, "Routes search API", "HTTP / REST")
+
+Rel(orderService, customerService, "Obtains customer and address snapshot", "gRPC / Protobuf")
+Rel(orderService, cartService, "Obtains immutable checkout cart snapshot and clears cart", "gRPC / Protobuf")
+Rel(orderService, listingService, "Validates listings and authoritative prices", "gRPC / Protobuf")
+Rel(orderService, inventoryService, "Queries availability and reservation state", "gRPC / Protobuf")
+Rel(listingService, sellerService, "Validates seller eligibility", "gRPC / Protobuf")
+Rel(listingService, catalogService, "Validates and obtains canonical product information", "gRPC / Protobuf")
+Rel(inventoryService, listingService, "Validates listing identity", "gRPC / Protobuf")
+Rel(fulfillmentService, inventoryService, "Queries warehouses and inventory state", "gRPC / Protobuf")
+
+Rel(orderService, kafka, "Publishes inventory, payment and fulfilment Saga commands; publishes order events", "Kafka / Avro")
+Rel(kafka, inventoryService, "Delivers inventory reservation / release / commit commands", "Kafka / Avro")
+Rel(inventoryService, kafka, "Publishes InventoryReserved, InventoryRejected and availability events", "Kafka / Avro")
+Rel(kafka, paymentService, "Delivers authorize / capture / void / refund commands", "Kafka / Avro")
+Rel(paymentService, kafka, "Publishes payment authorization, capture and failure outcomes", "Kafka / Avro")
+Rel(kafka, fulfillmentService, "Delivers fulfilment plan / cancel / release commands", "Kafka / Avro")
+Rel(fulfillmentService, kafka, "Publishes fulfilment and shipment outcomes", "Kafka / Avro")
+Rel(kafka, orderService, "Delivers Saga participant outcomes", "Kafka / Avro")
+
+Rel(catalogService, kafka, "Publishes product lifecycle events", "Kafka / Avro")
+Rel(listingService, kafka, "Publishes listing and price events", "Kafka / Avro")
+Rel(sellerService, kafka, "Publishes seller lifecycle events", "Kafka / Avro")
+Rel(customerService, kafka, "Publishes customer lifecycle events", "Kafka / Avro")
+Rel(kafka, searchService, "Delivers catalog, listing and inventory availability events", "Kafka / Avro")
+
+Rel(paymentService, paymentProvider, "Authorize, capture, void, refund and reconcile payment status", "HTTPS")
+Rel(fulfillmentService, carrierProvider, "Creates/manages shipments and retrieves tracking state", "HTTPS")
+
+Rel(customerService, customerDb, "Reads and writes exclusively", "jOOQ / JDBC")
+Rel(searchService, sellerDb, "Reads and writes exclusively", "jOOQ / JDBC")
+Rel(catalogService, catalogDb, "Reads and writes exclusively", "jOOQ / JDBC")
+Rel(listingService, listingDb, "Reads and writes exclusively", "jOOQ / JDBC")
+Rel(inventoryService, inventoryDb, "Reads and writes exclusively", "jOOQ / JDBC")
+Rel(cartService, cartDb, "Reads and writes exclusively", "jOOQ / JDBC")
+Rel(cartService, cartRedis, "Reads and writes exclusively", "jOOQ / JDBC")
+Rel(orderService, orderDb, "Reads and writes exclusively", "jOOQ / JDBC")
+Rel(paymentService, paymentDb, "Reads and writes exclusively", "jOOQ / JDBC")
+Rel(fulfillmentService, fulfillmentDb, "Reads and writes exclusively", "jOOQ / JDBC")
+Rel(searchService, opensearch, "Reads and writes exclusively", "jOOQ / JDBC")
+
+Rel(schemaRegistry, schemaRegistryDb, "Stores schemas, rules and metadata", "JDBC")
+
+Rel(otelCollector, tempo, "Exports distributed traces", "OTLP")
+Rel(alloy, loki, "Pushes structured logs", "Loki protocol")
+Rel(grafana, prometheus, "Queries metrics", "PromQL")
+Rel(grafana, loki, "Queries logs", "LogQL")
+Rel(grafana, tempo, "Queries distributed traces", "Tempo API")
+
+note right of schemaRegistry
+Kafka integration contracts: Avro
+
+Internal synchronous contracts: Protobuf
+
+Default compatibility policy:
+FULL_TRANSITIVE
+end note
+
+note right of observability
+Every Spring Boot service:
+
+* exposes Actuator health endpoints
+* exposes Micrometer metrics
+* propagates OpenTelemetry traces
+* writes structured JSON logs to stdout
+
+Prometheus scrapes metrics.
+OTel Collector receives traces.
+Grafana Alloy collects container logs.
+
+Individual telemetry arrows are omitted
+to keep the diagram readable.
+end note
+
+note bottom of kafka
+Kafka delivery model: at-least-once.
+
+PostgreSQL-backed producers use
+Transactional Outbox.
+
+Consumers must be idempotent and use
+Inbox/deduplication where appropriate.
+
+Checkout:
+orchestration by Order Service.
+
+Search projection:
+event choreography.
+end note
+
+note bottom of orderService
+Order Service owns the checkout Saga state.
+
+Inventory reservation, payment mutations and
+fulfilment mutations are NOT implemented as
+a synchronous distributed gRPC transaction.
+end note
+
+SHOW_LEGEND()
+@enduml
