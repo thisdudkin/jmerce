@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: customer-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/customers
+    username: postgres
+    password: root
+  flyway:
+    fail-on-missing-locations: true
+    validate-migration-naming: true
+  threads:
+    virtual:
+      enabled: true
+
+decorator:
+  datasource:
+    datasource-proxy:
+      format-sql: true
+      count-query: true
+
+logging:
+  level:
+    net.ttddyy.dsproxy.listener.logging: debug
