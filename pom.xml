@@ -21,32 +21,47 @@
 
     <properties>
         <!-- General Settings -->
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
+        <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- MapStruct Settings -->
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <lombok.mapstruct.binding.version>0.2.0</lombok.mapstruct.binding.version>
 
         <!-- JaCoCo Settings -->
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
         <jacoco.branch.coverage.minimum>0.70</jacoco.branch.coverage.minimum>
 
         <!-- Other Settings -->
-        <sql.formatter.version>2.0.5</sql.formatter.version>
         <datasource.proxy.version>2.0.1</datasource.proxy.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- MapStruct -->
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+
+            <!-- Lombok & MapStruct Integration -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-mapstruct-binding</artifactId>
+                <version>${lombok.mapstruct.binding.version}</version>
+            </dependency>
+
             <!-- SQL Logging -->
             <dependency>
                 <groupId>com.github.gavlyukovskiy</groupId>
                 <artifactId>datasource-proxy-spring-boot-starter</artifactId>
                 <version>${datasource.proxy.version}</version>
-                <scope>compile</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.github.vertical-blank</groupId>
-                <artifactId>sql-formatter</artifactId>
-                <version>${sql.formatter.version}</version>
                 <scope>compile</scope>
             </dependency>
         </dependencies>
@@ -55,7 +70,41 @@
     <build>
         <pluginManagement>
             <plugins>
-                <!-- Code Coverage -->
+                <!-- Maven Plugin: Compiler -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                            </path>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok-mapstruct-binding</artifactId>
+                            </path>
+                            <path>
+                                <groupId>org.mapstruct</groupId>
+                                <artifactId>mapstruct-processor</artifactId>
+                            </path>
+                            <path>
+                                <groupId>org.hibernate.orm</groupId>
+                                <artifactId>hibernate-processor</artifactId>
+                            </path>
+                        </annotationProcessorPaths>
+                        <annotationProcessorPathsUseDepMgmt>true</annotationProcessorPathsUseDepMgmt>
+                        <compilerArgs>
+                            <!-- Generate Spring Beans for MapStruct -->
+                            <arg>-Amapstruct.defaultComponentModel=spring</arg>
+
+                            <!-- Prefer constructor injection for MapStruct -->
+                            <arg>-Amapstruct.defaultInjectionStrategy=constructor</arg>
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
+
+                <!-- Maven Plugin: Code Coverage -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>

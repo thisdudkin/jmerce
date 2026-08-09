@@ -6,8 +6,26 @@ spring:
     username: postgres
     password: root
   flyway:
+    default-schema: profile
     fail-on-missing-locations: true
     validate-migration-naming: true
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: validate
+        default_batch_fetch_size: 50
+        jdbc:
+          time_zone: UTC
+          batch_size: 50
+          fetch_size: 100
+        order_inserts: true
+        order_updates: true
+        query:
+          in_clause_parameter_padding: true
+          fail_on_pagination_over_collection_fetch: true
+        default_schema: profile
   threads:
     virtual:
       enabled: true
