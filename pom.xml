@@ -205,6 +205,14 @@
                                     <schemaMapping>ProblemDetail=org.springframework.http.ProblemDetail</schemaMapping>
                                     <schemaMapping>FieldError=java.lang.Object</schemaMapping>
                                 </schemaMappings>
+                                <typeMappings>
+                                    <typeMapping>DateTime=Instant</typeMapping>
+                                    <typeMapping>OffsetDateTime=Instant</typeMapping>
+                                </typeMappings>
+                                <importMappings>
+                                    <importMapping>Instant=java.time.Instant</importMapping>
+                                    <importMapping>OffsetDateTime=java.time.Instant</importMapping>
+                                </importMappings>
                             </configuration>
                         </execution>
                     </executions>
