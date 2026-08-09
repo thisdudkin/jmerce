@@ -85,7 +85,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CustomerReplaceRequest'
+              $ref: '#/components/schemas/CustomerUpdateRequest'
       responses:
         '200':
           description: Customer profile updated.
@@ -212,7 +212,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AddressReplaceRequest'
+              $ref: '#/components/schemas/AddressUpdateRequest'
       responses:
         '200':
           description: Customer address updated.
@@ -319,7 +319,7 @@ components:
         phoneNumber:
           $ref: '#/components/schemas/NullablePhoneNumber'
 
-    CustomerReplaceRequest:
+    CustomerUpdateRequest:
       type: object
       additionalProperties: false
       required:
@@ -438,7 +438,7 @@ components:
           default: false
           description: Whether to make this address the default for its purpose.
 
-    AddressReplaceRequest:
+    AddressUpdateRequest:
       type: object
       additionalProperties: false
       required:
