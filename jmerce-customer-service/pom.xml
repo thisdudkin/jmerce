@@ -12,6 +12,11 @@
 
     <artifactId>jmerce-customer-service</artifactId>
 
+    <properties>
+        <openapi.generator.api-package>com.jmerce.customer.rest.api</openapi.generator.api-package>
+        <openapi.generator.model-package>com.jmerce.customer.rest.dto</openapi.generator.model-package>
+    </properties>
+
     <dependencies>
         <!-- Developer Tools -->
         <dependency>
@@ -107,6 +112,12 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- OpenAPI Code Generation -->
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
