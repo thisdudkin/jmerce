@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.jmerce.customer.domain.model.value;
+package com.jmerce.customer.enums;
 
-public enum AddressPurpose {
-
-    SHIPPING,
-    BILLING
-
+public enum CustomerStatus {
+    ACTIVE,
+    SUSPENDED,
+    CLOSED
 }
