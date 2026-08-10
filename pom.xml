@@ -35,12 +35,12 @@
         <!-- Other Settings -->
         <datasource.proxy.version>2.0.1</datasource.proxy.version>
 
-        <!-- OpenAPI Code Generation -->
-        <openapi-generator.plugin.version>7.24.0</openapi-generator.plugin.version>
-        <openapi.generator.api-package>${project.groupId}.rest.api</openapi.generator.api-package>
-        <openapi.generator.model-package>${project.groupId}.rest.dto</openapi.generator.model-package>
-        <openapi.generator.input-spec>${maven.multiModuleProjectDirectory}/api/${project.artifactId}.yaml
-        </openapi.generator.input-spec>
+        <!-- OpenAPI Settings -->
+        <openapi.spec.filename/>
+        <openapi.generator.plugin.version>7.24.0</openapi.generator.plugin.version>
+        <openapi.spec.directory>${maven.multiModuleProjectDirectory}/api</openapi.spec.directory>
+        <openapi.generator.api.package>${project.groupId}.rest.api</openapi.generator.api.package>
+        <openapi.generator.model.package>${project.groupId}.rest.dto</openapi.generator.model.package>
     </properties>
 
     <dependencyManagement>
@@ -157,7 +157,7 @@
                 <plugin>
                     <groupId>org.openapitools</groupId>
                     <artifactId>openapi-generator-maven-plugin</artifactId>
-                    <version>${openapi-generator.plugin.version}</version>
+                    <version>${openapi.generator.plugin.version}</version>
                     <executions>
                         <execution>
                             <id>openapi-gen</id>
@@ -174,15 +174,16 @@
                                 <generateApiTests>false</generateApiTests>
                                 <generateModelTests>false</generateModelTests>
                                 <addCompileSourceRoot>true</addCompileSourceRoot>
-                                <inputSpec>${openapi.generator.input-spec}</inputSpec>
                                 <generateSupportingFiles>false</generateSupportingFiles>
-                                <apiPackage>${openapi.generator.api-package}</apiPackage>
+                                <apiPackage>${openapi.generator.api.package}</apiPackage>
                                 <generateApiDocumentation>false</generateApiDocumentation>
                                 <generateModelDocumentation>false</generateModelDocumentation>
-                                <modelPackage>${openapi.generator.model-package}</modelPackage>
+                                <modelPackage>${openapi.generator.model.package}</modelPackage>
                                 <output>${project.build.directory}/generated-sources/openapi</output>
+                                <inputSpec>${openapi.spec.directory}/${openapi.spec.filename}</inputSpec>
                                 <configOptions>
                                     <useTags>true</useTags>
+                                    <useJspecify>true</useJspecify>
                                     <useJackson3>true</useJackson3>
                                     <useSwaggerUI>false</useSwaggerUI>
                                     <interfaceOnly>true</interfaceOnly>
@@ -192,19 +193,12 @@
                                     <useResponseEntity>true</useResponseEntity>
                                     <annotationLibrary>none</annotationLibrary>
                                     <skipDefaultInterface>true</skipDefaultInterface>
-                                    <requestMappingMode>api_interface</requestMappingMode>
-                                    <useSpringBuiltInValidation>true</useSpringBuiltInValidation>
                                     <documentationProvider>none</documentationProvider>
+                                    <requestMappingMode>api_interface</requestMappingMode>
                                     <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                    <useSpringBuiltInValidation>true</useSpringBuiltInValidation>
                                 </configOptions>
                                 <!-- Reuse Spring's RFC 9457 type for shared error responses. -->
-                                <inlineSchemaNameMappings>
-                                    <inlineSchemaNameMapping>ProblemDetail_1=ProblemDetail</inlineSchemaNameMapping>
-                                </inlineSchemaNameMappings>
-                                <schemaMappings>
-                                    <schemaMapping>ProblemDetail=org.springframework.http.ProblemDetail</schemaMapping>
-                                    <schemaMapping>FieldError=java.lang.Object</schemaMapping>
-                                </schemaMappings>
                                 <typeMappings>
                                     <typeMapping>DateTime=Instant</typeMapping>
                                     <typeMapping>OffsetDateTime=Instant</typeMapping>

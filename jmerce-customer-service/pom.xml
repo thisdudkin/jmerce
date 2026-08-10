@@ -13,8 +13,9 @@
     <artifactId>jmerce-customer-service</artifactId>
 
     <properties>
-        <openapi.generator.api-package>com.jmerce.customer.rest.api</openapi.generator.api-package>
-        <openapi.generator.model-package>com.jmerce.customer.rest.dto</openapi.generator.model-package>
+        <openapi.spec.filename>customers.yaml</openapi.spec.filename>
+        <openapi.generator.api.package>com.jmerce.customer.rest.api</openapi.generator.api.package>
+        <openapi.generator.model.package>com.jmerce.customer.rest.dto</openapi.generator.model.package>
     </properties>
 
     <dependencies>
