@@ -61,14 +61,14 @@ paths:
       operationId: getCustomer
       tags:
         - Customers
-      summary: Get a customer profile
+      summary: Get a customer profile with addresses
       responses:
         '200':
-          description: Customer profile found
+          description: Customer profile and addresses found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomerResponse'
+                $ref: '#/components/schemas/CustomerDetailsResponse'
 
     put:
       operationId: updateCustomer
@@ -330,6 +330,19 @@ components:
           format: date-time
           readOnly: true
           example: '2026-08-09T15:30:00Z'
+
+    CustomerDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/CustomerResponse'
+        - type: object
+          required:
+            - addresses
+          properties:
+            addresses:
+              type: array
+              description: Addresses owned by the customer
+              items:
+                $ref: '#/components/schemas/AddressResponse'
 
     AddressCreateRequest:
       type: object

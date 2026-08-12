@@ -160,45 +160,34 @@
                     <version>${openapi.generator.plugin.version}</version>
                     <executions>
                         <execution>
-                            <id>openapi-gen</id>
-                            <phase>generate-sources</phase>
+                            <id>openapi</id>
                             <goals>
                                 <goal>generate</goal>
                             </goals>
                             <configuration>
-                                <library>spring-boot</library>
-                                <generateApis>true</generateApis>
                                 <cleanupOutput>true</cleanupOutput>
                                 <generatorName>spring</generatorName>
-                                <generateModels>true</generateModels>
                                 <generateApiTests>false</generateApiTests>
                                 <generateModelTests>false</generateModelTests>
-                                <addCompileSourceRoot>true</addCompileSourceRoot>
                                 <generateSupportingFiles>false</generateSupportingFiles>
                                 <apiPackage>${openapi.generator.api.package}</apiPackage>
                                 <generateApiDocumentation>false</generateApiDocumentation>
                                 <generateModelDocumentation>false</generateModelDocumentation>
                                 <modelPackage>${openapi.generator.model.package}</modelPackage>
-                                <output>${project.build.directory}/generated-sources/openapi</output>
                                 <inputSpec>${openapi.spec.directory}/${openapi.spec.filename}</inputSpec>
                                 <configOptions>
                                     <useTags>true</useTags>
                                     <useJspecify>true</useJspecify>
                                     <useJackson3>true</useJackson3>
-                                    <useSwaggerUI>false</useSwaggerUI>
                                     <interfaceOnly>true</interfaceOnly>
                                     <useSpringBoot4>true</useSpringBoot4>
                                     <openApiNullable>false</openApiNullable>
-                                    <sourceFolder>src/main/java</sourceFolder>
-                                    <useResponseEntity>true</useResponseEntity>
                                     <annotationLibrary>none</annotationLibrary>
                                     <skipDefaultInterface>true</skipDefaultInterface>
                                     <documentationProvider>none</documentationProvider>
                                     <requestMappingMode>api_interface</requestMappingMode>
-                                    <hideGenerationTimestamp>true</hideGenerationTimestamp>
                                     <useSpringBuiltInValidation>true</useSpringBuiltInValidation>
                                 </configOptions>
-                                <!-- Reuse Spring's RFC 9457 type for shared error responses. -->
                                 <typeMappings>
                                     <typeMapping>DateTime=Instant</typeMapping>
                                     <typeMapping>OffsetDateTime=Instant</typeMapping>
