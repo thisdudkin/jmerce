@@ -5,6 +5,8 @@
 
 package com.jmerce.customer.rest.contoller;
 
+import com.jmerce.customer.exception.CustomerAlreadyExistsException;
+import com.jmerce.customer.exception.CustomerNotFoundException;
 import com.jmerce.customer.rest.dto.CustomerCreateRequest;
 import com.jmerce.customer.rest.dto.CustomerDetailsResponse;
 import com.jmerce.customer.rest.dto.CustomerResponse;
@@ -44,6 +46,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CustomerRestController.class)
@@ -77,6 +80,24 @@ class CustomerRestControllerTests {
     }
 
     @Test
+    void shouldReturnConflictWhenCustomerAlreadyExists() throws Exception {
+        // Arrange
+        CustomerCreateRequest request = randomCustomerCreateRequest();
+        var exception = new CustomerAlreadyExistsException(request.getUserId());
+        when(customerService.createCustomer(request)).thenThrow(exception);
+
+        // Act & Assert
+        mockMvc.perform(post(PATH_CREATE_CUSTOMER)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isConflict())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.status").value(409))
+            .andExpect(jsonPath("$.detail").value(exception.getMessage()));
+        verify(customerService).createCustomer(request);
+    }
+
+    @Test
     void shouldRejectInvalidCustomerCreation() throws Exception {
         // Arrange
         CustomerCreateRequest request = new CustomerCreateRequest(randomUuid(), "", randomString());
@@ -85,7 +106,21 @@ class CustomerRestControllerTests {
         mockMvc.perform(post(PATH_CREATE_CUSTOMER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.status").value(400));
+        verifyNoInteractions(customerService);
+    }
+
+    @Test
+    void shouldRejectMalformedCustomerCreation() throws Exception {
+        // Act & Assert
+        mockMvc.perform(post(PATH_CREATE_CUSTOMER)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.status").value(400));
         verifyNoInteractions(customerService);
     }
 
@@ -101,6 +136,37 @@ class CustomerRestControllerTests {
             .andExpect(status().isOk())
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
             .andExpect(content().json(objectMapper.writeValueAsString(response), JsonCompareMode.STRICT));
+        verify(customerService).getCustomer(customerId);
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenCustomerDoesNotExist() throws Exception {
+        // Arrange
+        UUID customerId = randomUuid();
+        var exception = new CustomerNotFoundException(customerId);
+        when(customerService.getCustomer(customerId)).thenThrow(exception);
+
+        // Act & Assert
+        mockMvc.perform(get(PATH_GET_CUSTOMER, customerId))
+            .andExpect(status().isNotFound())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.detail").value(exception.getMessage()));
+        verify(customerService).getCustomer(customerId);
+    }
+
+    @Test
+    void shouldReturnInternalServerErrorForUnexpectedException() throws Exception {
+        // Arrange
+        UUID customerId = randomUuid();
+        when(customerService.getCustomer(customerId)).thenThrow(new IllegalStateException("Sensitive details"));
+
+        // Act & Assert
+        mockMvc.perform(get(PATH_GET_CUSTOMER, customerId))
+            .andExpect(status().isInternalServerError())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.status").value(500))
+            .andExpect(jsonPath("$.detail").doesNotExist());
         verify(customerService).getCustomer(customerId);
     }
 
