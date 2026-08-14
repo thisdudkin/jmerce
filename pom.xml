@@ -36,6 +36,8 @@
         <!-- renovate: datasource=docker depName=paketobuildpacks/builder-noble-java-tiny -->
         <paketo.builder.version>0.0.152</paketo.builder.version>
         <paketo.builder.image>paketobuildpacks/builder-noble-java-tiny:${paketo.builder.version}</paketo.builder.image>
+        <!-- renovate: datasource=docker depName=paketobuildpacks/health-checker -->
+        <paketo.health-checker.version>2.13.4</paketo.health-checker.version>
         <container.image.name>${project.artifactId}:${project.version}</container.image.name>
 
         <!-- Other Settings -->
@@ -238,6 +240,13 @@
                                         <image>
                                             <builder>${paketo.builder.image}</builder>
                                             <name>${container.image.name}</name>
+                                            <env>
+                                                <BP_HEALTH_CHECKER_ENABLED>true</BP_HEALTH_CHECKER_ENABLED>
+                                            </env>
+                                            <buildpacks>
+                                                <buildpack>urn:cnb:builder:paketo-buildpacks/java</buildpack>
+                                                <buildpack>paketobuildpacks/health-checker:${paketo.health-checker.version}</buildpack>
+                                            </buildpacks>
                                             <buildCache>
                                                 <volume>
                                                     <name>cache-${project.artifactId}.build</name>
