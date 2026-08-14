@@ -13,7 +13,7 @@
     <artifactId>jmerce-customer-service</artifactId>
 
     <properties>
-        <openapi.spec.filename>customers.yaml</openapi.spec.filename>
+        <openapi.spec.filename>customer.yaml</openapi.spec.filename>
         <openapi.generator.api.package>com.jmerce.customer.rest.api</openapi.generator.api.package>
         <openapi.generator.model.package>com.jmerce.customer.rest.dto</openapi.generator.model.package>
     </properties>
@@ -119,6 +119,12 @@
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
+                <configuration>
+                    <schemaMappings>
+                        <schemaMapping>AddressPurpose=com.jmerce.customer.enums.AddressPurpose</schemaMapping>
+                        <schemaMapping>CustomerStatus=com.jmerce.customer.enums.CustomerStatus</schemaMapping>
+                    </schemaMappings>
+                </configuration>
             </plugin>
         </plugins>
     </build>

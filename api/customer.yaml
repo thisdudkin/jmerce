@@ -1,0 +1,431 @@
+openapi: 3.0.3
+
+info:
+  title: Customer Service API
+  description: Public REST API for managing customer profiles and addresses
+  version: 0.0.1
+
+servers:
+  - url: http://localhost:8090
+    description: Local
+  - url: https://api.jmerce.com
+    description: Production
+
+tags:
+  - name: Customers
+    description: Customer profile lifecycle
+  - name: Addresses
+    description: Customer shipping and billing addresses
+
+paths:
+  /customers:
+    post:
+      operationId: createCustomer
+      tags: [Customers]
+      summary: Create a customer profile
+      requestBody:
+        $ref: '#/components/requestBodies/CustomerCreate'
+      responses:
+        '201':
+          description: Customer profile created
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+
+  /customers/{customerId}:
+    parameters:
+      - $ref: '#/components/parameters/CustomerId'
+    get:
+      operationId: getCustomer
+      tags: [Customers]
+      summary: Get a customer profile with addresses
+      responses:
+        '200':
+          description: Customer profile found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDetailsResponse'
+    put:
+      operationId: updateCustomer
+      tags: [Customers]
+      summary: Update customer profile data
+      requestBody:
+        $ref: '#/components/requestBodies/CustomerUpdate'
+      responses:
+        '200':
+          description: Customer profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+    delete:
+      operationId: deleteCustomer
+      tags: [Customers]
+      summary: Delete a customer profile
+      responses:
+        '204':
+          description: Customer profile deleted
+
+  /customers/{customerId}/status/active:
+    parameters:
+      - $ref: '#/components/parameters/CustomerId'
+    put:
+      operationId: activateCustomer
+      tags: [Customers]
+      summary: Activate a customer profile
+      responses:
+        '200':
+          description: Customer profile activated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+
+  /customers/{customerId}/status/suspended:
+    parameters:
+      - $ref: '#/components/parameters/CustomerId'
+    put:
+      operationId: suspendCustomer
+      tags: [Customers]
+      summary: Suspend a customer profile
+      responses:
+        '200':
+          description: Customer profile suspended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+
+  /customers/{customerId}/status/closed:
+    parameters:
+      - $ref: '#/components/parameters/CustomerId'
+    put:
+      operationId: closeCustomer
+      tags: [Customers]
+      summary: Close a customer profile
+      responses:
+        '200':
+          description: Customer profile closed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+
+  /customers/{customerId}/addresses:
+    parameters:
+      - $ref: '#/components/parameters/CustomerId'
+    get:
+      operationId: listAddresses
+      tags: [Addresses]
+      summary: List customer addresses
+      responses:
+        '200':
+          description: Customer addresses returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AddressResponse'
+    post:
+      operationId: createAddress
+      tags: [Addresses]
+      summary: Create a customer address
+      requestBody:
+        $ref: '#/components/requestBodies/AddressCreate'
+      responses:
+        '201':
+          description: Customer address created
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressResponse'
+
+  /customers/{customerId}/addresses/{addressId}:
+    parameters:
+      - $ref: '#/components/parameters/CustomerId'
+      - $ref: '#/components/parameters/AddressId'
+    get:
+      operationId: getAddress
+      tags: [Addresses]
+      summary: Get a customer address
+      responses:
+        '200':
+          description: Customer address found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressResponse'
+    put:
+      operationId: updateAddress
+      tags: [Addresses]
+      summary: Update a customer address
+      requestBody:
+        $ref: '#/components/requestBodies/AddressUpdate'
+      responses:
+        '200':
+          description: Customer address updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressResponse'
+    delete:
+      operationId: deleteAddress
+      tags: [Addresses]
+      summary: Delete a customer address
+      responses:
+        '204':
+          description: Customer address deleted
+
+  /customers/{customerId}/addresses/{addressId}/default:
+    parameters:
+      - $ref: '#/components/parameters/CustomerId'
+      - $ref: '#/components/parameters/AddressId'
+    put:
+      operationId: makeDefault
+      tags: [Addresses]
+      summary: Make a customer address the default for its purpose
+      responses:
+        '200':
+          description: Default address updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressResponse'
+
+components:
+  parameters:
+    CustomerId:
+      name: customerId
+      in: path
+      required: true
+      description: Customer identifier
+      schema:
+        type: string
+        format: uuid
+      example: 01985dd9-6d7d-7c76-a91b-4a175c3dbfc3
+    AddressId:
+      name: addressId
+      in: path
+      required: true
+      description: Address identifier
+      schema:
+        type: string
+        format: uuid
+      example: 01985dda-369b-79ca-b943-3e0353f206d8
+
+  headers:
+    Location:
+      description: URI of the created resource
+      schema:
+        type: string
+        format: uri
+
+  requestBodies:
+    CustomerCreate:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomerCreateRequest'
+    CustomerUpdate:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomerUpdateRequest'
+    AddressCreate:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AddressCreateRequest'
+    AddressUpdate:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AddressUpdateRequest'
+
+  schemas:
+    CustomerCreateRequest:
+      type: object
+      required: [userId, givenName, familyName]
+      properties:
+        userId:
+          type: string
+          format: uuid
+          example: 01985dd8-d6d7-758b-b778-3b20e2a618c9
+        givenName:
+          $ref: '#/components/schemas/GivenName'
+        familyName:
+          $ref: '#/components/schemas/FamilyName'
+        phoneNumber:
+          $ref: '#/components/schemas/PhoneNumber'
+
+    CustomerUpdateRequest:
+      type: object
+      required: [givenName, familyName]
+      properties:
+        givenName:
+          $ref: '#/components/schemas/GivenName'
+        familyName:
+          $ref: '#/components/schemas/FamilyName'
+        phoneNumber:
+          $ref: '#/components/schemas/PhoneNumber'
+
+    CustomerResponse:
+      type: object
+      required: [id, userId, givenName, familyName, phoneNumber, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          example: 01985dd9-6d7d-7c76-a91b-4a175c3dbfc3
+        userId:
+          type: string
+          format: uuid
+          readOnly: true
+          example: 01985dd8-d6d7-758b-b778-3b20e2a618c9
+        givenName:
+          $ref: '#/components/schemas/GivenName'
+        familyName:
+          $ref: '#/components/schemas/FamilyName'
+        phoneNumber:
+          $ref: '#/components/schemas/PhoneNumber'
+        status:
+          $ref: '#/components/schemas/CustomerStatus'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+
+    CustomerDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/CustomerResponse'
+        - type: object
+          required: [addresses]
+          properties:
+            addresses:
+              type: array
+              items:
+                $ref: '#/components/schemas/AddressResponse'
+
+    AddressCreateRequest:
+      allOf:
+        - $ref: '#/components/schemas/AddressUpdateRequest'
+        - type: object
+          properties:
+            isDefault:
+              type: boolean
+              default: false
+
+    AddressUpdateRequest:
+      type: object
+      required: [purpose, recipientName, line1, city, countryCode]
+      properties:
+        purpose:
+          $ref: '#/components/schemas/AddressPurpose'
+        recipientName:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: Ivan Ivanov
+        line1:
+          type: string
+          minLength: 1
+          maxLength: 300
+          example: 15 Strict Avenue
+        line2:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 300
+          example: Apartment 42
+        city:
+          type: string
+          minLength: 1
+          maxLength: 150
+          example: Minsk
+        region:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 150
+          example: Minsk
+        postalCode:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 32
+          example: '220030'
+        countryCode:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          description: ISO 3166-1 alpha-2 country code
+          example: BY
+        phoneNumber:
+          $ref: '#/components/schemas/PhoneNumber'
+
+    AddressResponse:
+      allOf:
+        - $ref: '#/components/schemas/AddressUpdateRequest'
+        - type: object
+          required: [id, customerId, isDefault, createdAt, updatedAt]
+          properties:
+            id:
+              type: string
+              format: uuid
+              readOnly: true
+              example: 01985dda-369b-79ca-b943-3e0353f206d8
+            customerId:
+              type: string
+              format: uuid
+              readOnly: true
+              example: 01985dd9-6d7d-7c76-a91b-4a175c3dbfc3
+            isDefault:
+              type: boolean
+              readOnly: true
+              example: true
+            createdAt:
+              $ref: '#/components/schemas/Timestamp'
+            updatedAt:
+              $ref: '#/components/schemas/Timestamp'
+
+    GivenName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      example: Ivan
+    FamilyName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      example: Ivanov
+    PhoneNumber:
+      type: string
+      nullable: true
+      pattern: '^\+[1-9][0-9]{7,14}$'
+      example: '+375291234567'
+    Timestamp:
+      type: string
+      format: date-time
+      readOnly: true
+      example: '2026-08-09T15:30:00Z'
+    CustomerStatus:
+      type: string
+      enum: [ACTIVE, SUSPENDED, CLOSED]
+      example: ACTIVE
+    AddressPurpose:
+      type: string
+      enum: [SHIPPING, BILLING]
+      example: SHIPPING
