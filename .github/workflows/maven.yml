@@ -1,0 +1,31 @@
+name: maven
+'on':
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maven-quality-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ vars.JAVA_VERSION }}
+          cache: maven
+      - name: Verify
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify
