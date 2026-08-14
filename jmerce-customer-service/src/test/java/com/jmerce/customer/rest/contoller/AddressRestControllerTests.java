@@ -6,6 +6,7 @@
 package com.jmerce.customer.rest.contoller;
 
 import com.jmerce.customer.enums.AddressPurpose;
+import com.jmerce.customer.exception.AddressNotFoundException;
 import com.jmerce.customer.rest.dto.AddressCreateRequest;
 import com.jmerce.customer.rest.dto.AddressResponse;
 import com.jmerce.customer.rest.dto.AddressUpdateRequest;
@@ -44,6 +45,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AddressRestController.class)
@@ -96,7 +98,9 @@ class AddressRestControllerTests {
         mockMvc.perform(post(PATH_CREATE_ADDRESS, customerId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.status").value(400));
         verifyNoInteractions(addressService);
     }
 
@@ -119,6 +123,16 @@ class AddressRestControllerTests {
     }
 
     @Test
+    void shouldRejectInvalidCustomerId() throws Exception {
+        // Act & Assert
+        mockMvc.perform(get(PATH_LIST_ADDRESSES, "invalid-customer-id"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.status").value(400));
+        verifyNoInteractions(addressService);
+    }
+
+    @Test
     void shouldGetAddress() throws Exception {
         // Arrange
         UUID customerId = randomUuid();
@@ -131,6 +145,23 @@ class AddressRestControllerTests {
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
             .andExpect(content().json(objectMapper.writeValueAsString(response), JsonCompareMode.STRICT));
         verify(addressService).getAddress(customerId, response.getId());
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenAddressDoesNotExist() throws Exception {
+        // Arrange
+        UUID customerId = randomUuid();
+        UUID addressId = randomUuid();
+        var exception = new AddressNotFoundException(customerId, addressId);
+        when(addressService.getAddress(customerId, addressId)).thenThrow(exception);
+
+        // Act & Assert
+        mockMvc.perform(get(PATH_GET_ADDRESS, customerId, addressId))
+            .andExpect(status().isNotFound())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.detail").value(exception.getMessage()));
+        verify(addressService).getAddress(customerId, addressId);
     }
 
     @Test

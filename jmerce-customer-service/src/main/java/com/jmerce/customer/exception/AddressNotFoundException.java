@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import java.util.UUID;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class AddressNotFoundException extends RuntimeException {
+public class AddressNotFoundException extends EntityNotFoundException {
     public AddressNotFoundException(UUID customerId, UUID addressId) {
         super("Address %s not found for customer %s".formatted(addressId, customerId));
     }

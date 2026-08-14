@@ -29,6 +29,9 @@ spring:
   threads:
     virtual:
       enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
 
 decorator:
   datasource:
