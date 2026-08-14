@@ -6,7 +6,7 @@
 package com.jmerce.customer.rest.exception;
 
 import com.jmerce.customer.exception.CustomerAlreadyExistsException;
-import jakarta.persistence.EntityNotFoundException;
+import com.jmerce.customer.exception.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
