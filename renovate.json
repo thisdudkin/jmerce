@@ -36,5 +36,17 @@
       ],
       "groupName": "Maven non-major dependencies"
     }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update the Paketo builder image",
+      "managerFilePatterns": [
+        "/^pom\\.xml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+<paketo\\.builder\\.version>(?<currentValue>[^<]+)</paketo\\.builder\\.version>"
+      ]
+    }
   ]
 }

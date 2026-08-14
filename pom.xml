@@ -32,6 +32,12 @@
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
         <jacoco.branch.coverage.minimum>0.70</jacoco.branch.coverage.minimum>
 
+        <!-- Container Image Settings -->
+        <!-- renovate: datasource=docker depName=paketobuildpacks/builder-noble-java-tiny -->
+        <paketo.builder.version>0.0.152</paketo.builder.version>
+        <paketo.builder.image>paketobuildpacks/builder-noble-java-tiny:${paketo.builder.version}</paketo.builder.image>
+        <container.image.name>${project.artifactId}:${project.version}</container.image.name>
+
         <!-- Other Settings -->
         <datasource.proxy.version>2.0.1</datasource.proxy.version>
 
@@ -210,5 +216,47 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>docker</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <!-- OCI Image Generation with Cloud Native Buildpacks -->
+                        <plugin>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>build-container-image</id>
+                                    <phase>install</phase>
+                                    <goals>
+                                        <goal>build-image-no-fork</goal>
+                                    </goals>
+                                    <configuration>
+                                        <image>
+                                            <builder>${paketo.builder.image}</builder>
+                                            <name>${container.image.name}</name>
+                                            <buildCache>
+                                                <volume>
+                                                    <name>cache-${project.artifactId}.build</name>
+                                                </volume>
+                                            </buildCache>
+                                            <launchCache>
+                                                <volume>
+                                                    <name>cache-${project.artifactId}.launch</name>
+                                                </volume>
+                                            </launchCache>
+                                        </image>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
