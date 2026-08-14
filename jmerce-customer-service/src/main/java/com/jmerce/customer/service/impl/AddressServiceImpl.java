@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -47,17 +46,10 @@ public class AddressServiceImpl implements AddressService {
         Customer customer = getCustomerForUpdate(customerId);
         Address address = addressMapper.toEntity(request);
         if (address.isDefault()) {
-            boolean defaultAddressDemoted = demoteDefaultAddress(
-                customer,
-                address.getPurpose(),
-                null
-            );
-            if (defaultAddressDemoted) {
-                customerRepository.flush();
-            }
+            releaseDefault(customer, address);
         }
         customer.addAddress(address);
-        customerRepository.saveAndFlush(customer);
+        customerRepository.flush();
         return addressMapper.toResponse(address);
     }
 
@@ -81,17 +73,10 @@ public class AddressServiceImpl implements AddressService {
         }
         addressMapper.update(address, request);
         if (wasDefault && previousPurpose != address.getPurpose()) {
-            boolean targetPurposeDefaultDemoted = demoteDefaultAddress(
-                customer,
-                address.getPurpose(),
-                address.getId()
-            );
-            if (targetPurposeDefaultDemoted) {
-                customerRepository.flush();
-            }
+            releaseDefault(customer, address);
         }
         address.setDefault(wasDefault);
-        customerRepository.saveAndFlush(customer);
+        customerRepository.flush();
         return addressMapper.toResponse(address);
     }
 
@@ -101,7 +86,7 @@ public class AddressServiceImpl implements AddressService {
         Customer customer = getCustomerForUpdate(customerId);
         Address address = findAddress(customer, addressId);
         customer.removeAddress(address);
-        customerRepository.saveAndFlush(customer);
+        customerRepository.flush();
     }
 
     @Override
@@ -112,16 +97,9 @@ public class AddressServiceImpl implements AddressService {
         if (address.isDefault()) {
             return addressMapper.toResponse(address);
         }
-        boolean previousDefaultDemoted = demoteDefaultAddress(
-            customer,
-            address.getPurpose(),
-            address.getId()
-        );
-        if (previousDefaultDemoted) {
-            customerRepository.flush();
-        }
+        releaseDefault(customer, address);
         address.setDefault(true);
-        customerRepository.saveAndFlush(customer);
+        customerRepository.flush();
         return addressMapper.toResponse(address);
     }
 
@@ -143,17 +121,19 @@ public class AddressServiceImpl implements AddressService {
             .orElseThrow(() -> new AddressNotFoundException(customer.getId(), addressId));
     }
 
-    private boolean demoteDefaultAddress(Customer customer, AddressPurpose purpose, UUID excludedAddressId) {
+    private void releaseDefault(Customer customer, Address address) {
         boolean demoted = false;
         for (Address candidate : customer.getAddresses()) {
-            if (candidate.getPurpose() == purpose
-                && candidate.isDefault()
-                && !Objects.equals(candidate.getId(), excludedAddressId)) {
+            if (candidate != address
+                && candidate.getPurpose() == address.getPurpose()
+                && candidate.isDefault()) {
                 candidate.setDefault(false);
                 demoted = true;
             }
         }
-        return demoted;
+        if (demoted) {
+            customerRepository.flush();
+        }
     }
 
 }
