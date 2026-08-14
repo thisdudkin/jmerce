@@ -63,7 +63,7 @@ class CustomerServiceTests {
 
         // Assert
         assertThat(result).isSameAs(response);
-        verify(customerRepository).save(customer);
+        verify(customerRepository).saveAndFlush(customer);
     }
 
     @Test
