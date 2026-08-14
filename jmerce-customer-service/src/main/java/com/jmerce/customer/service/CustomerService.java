@@ -20,6 +20,12 @@ public interface CustomerService {
 
     CustomerResponse updateCustomer(UUID customerId, CustomerUpdateRequest request);
 
+    CustomerResponse activateCustomer(UUID customerId);
+
+    CustomerResponse suspendCustomer(UUID customerId);
+
+    CustomerResponse closeCustomer(UUID customerId);
+
     void deleteCustomer(UUID customerId);
 
 }

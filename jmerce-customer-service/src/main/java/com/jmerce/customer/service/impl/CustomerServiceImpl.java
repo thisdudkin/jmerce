@@ -6,6 +6,7 @@
 package com.jmerce.customer.service.impl;
 
 import com.jmerce.customer.entity.Customer;
+import com.jmerce.customer.enums.CustomerStatus;
 import com.jmerce.customer.exception.CustomerAlreadyExistsException;
 import com.jmerce.customer.exception.CustomerNotFoundException;
 import com.jmerce.customer.mapper.CustomerMapper;
@@ -35,8 +36,8 @@ public class CustomerServiceImpl implements CustomerService {
             throw new CustomerAlreadyExistsException(request.getUserId());
         }
         Customer customer = customerMapper.toEntity(request);
-        Customer savedCustomer = customerRepository.save(customer);
-        return customerMapper.toResponse(savedCustomer);
+        customerRepository.save(customer);
+        return customerMapper.toResponse(customer);
     }
 
     @Override
@@ -50,17 +51,45 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public CustomerResponse updateCustomer(UUID customerId, CustomerUpdateRequest request) {
-        Customer existingCustomer = customerRepository.findById(customerId)
-            .orElseThrow(() -> new CustomerNotFoundException(customerId));
-        customerMapper.update(existingCustomer, request);
-        Customer updatedCustomer = customerRepository.save(existingCustomer);
-        return customerMapper.toResponse(updatedCustomer);
+        Customer customer = loadCustomer(customerId);
+        customerMapper.update(customer, request);
+        return customerMapper.toResponse(customer);
+    }
+
+    @Override
+    @Transactional
+    public CustomerResponse activateCustomer(UUID customerId) {
+        return changeStatus(customerId, CustomerStatus.ACTIVE);
+    }
+
+    @Override
+    @Transactional
+    public CustomerResponse suspendCustomer(UUID customerId) {
+        return changeStatus(customerId, CustomerStatus.SUSPENDED);
+    }
+
+    @Override
+    @Transactional
+    public CustomerResponse closeCustomer(UUID customerId) {
+        return changeStatus(customerId, CustomerStatus.CLOSED);
     }
 
     @Override
     @Transactional
     public void deleteCustomer(UUID customerId) {
-        customerRepository.deleteById(customerId);
+        Customer customer = loadCustomer(customerId);
+        customerRepository.delete(customer);
+    }
+
+    private CustomerResponse changeStatus(UUID customerId, CustomerStatus status) {
+        Customer customer = loadCustomer(customerId);
+        customer.setStatus(status);
+        return customerMapper.toResponse(customer);
+    }
+
+    private Customer loadCustomer(UUID customerId) {
+        return customerRepository.findById(customerId)
+            .orElseThrow(() -> new CustomerNotFoundException(customerId));
     }
 
 }
