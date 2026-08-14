@@ -66,9 +66,10 @@ public class Customer {
     @Column
     private String phoneNumber;
 
+    @Builder.Default
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private CustomerStatus status;
+    private CustomerStatus status = CustomerStatus.ACTIVE;
 
     @Setter(NONE)
     @CreationTimestamp
