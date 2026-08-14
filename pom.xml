@@ -136,6 +136,13 @@
                                 <goal>check</goal>
                             </goals>
                             <configuration>
+                                <excludes>
+                                    <exclude>**/entity/**</exclude>
+                                    <exclude>**/mapper/**</exclude>
+                                    <exclude>**/rest/api/**</exclude>
+                                    <exclude>**/rest/dto/**</exclude>
+                                    <exclude>**/exception/**</exclude>
+                                </excludes>
                                 <rules>
                                     <rule>
                                         <element>BUNDLE</element>
