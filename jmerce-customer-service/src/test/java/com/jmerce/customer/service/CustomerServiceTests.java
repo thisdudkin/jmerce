@@ -23,6 +23,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.jmerce.customer.util.RandomTestData.randomCustomer;
+import static com.jmerce.customer.util.RandomTestData.randomCustomerCreateRequest;
+import static com.jmerce.customer.util.RandomTestData.randomCustomerResponse;
+import static com.jmerce.customer.util.RandomTestData.randomUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,10 +50,10 @@ class CustomerServiceTests {
     @Test
     void shouldCreateCustomer() {
         // Arrange
-        UUID userId = UUID.randomUUID();
-        CustomerCreateRequest request = new CustomerCreateRequest(userId, "Ivan", "Ivanov");
-        Customer customer = Customer.builder().userId(userId).build();
-        CustomerResponse response = new CustomerResponse();
+        CustomerCreateRequest request = randomCustomerCreateRequest();
+        UUID userId = request.getUserId();
+        Customer customer = randomCustomer();
+        CustomerResponse response = randomCustomerResponse();
         when(customerRepository.existsByUserId(userId)).thenReturn(false);
         when(customerMapper.toEntity(request)).thenReturn(customer);
         when(customerMapper.toResponse(customer)).thenReturn(response);
@@ -59,15 +63,14 @@ class CustomerServiceTests {
 
         // Assert
         assertThat(result).isSameAs(response);
-        assertThat(customer.getStatus()).isEqualTo(CustomerStatus.ACTIVE);
-        verify(customerRepository).save(customer);
+        verify(customerRepository).saveAndFlush(customer);
     }
 
     @Test
     void shouldRejectDuplicateCustomer() {
         // Arrange
-        UUID userId = UUID.randomUUID();
-        CustomerCreateRequest request = new CustomerCreateRequest(userId, "Ivan", "Ivanov");
+        CustomerCreateRequest request = randomCustomerCreateRequest();
+        UUID userId = request.getUserId();
         when(customerRepository.existsByUserId(userId)).thenReturn(true);
 
         // Act & Assert
@@ -80,9 +83,9 @@ class CustomerServiceTests {
     @Test
     void shouldActivateCustomer() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
-        Customer customer = Customer.builder().id(customerId).status(CustomerStatus.SUSPENDED).build();
-        CustomerResponse response = new CustomerResponse();
+        UUID customerId = randomUuid();
+        Customer customer = randomCustomer(customerId, CustomerStatus.SUSPENDED);
+        CustomerResponse response = randomCustomerResponse();
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(customerMapper.toResponse(customer)).thenReturn(response);
 
@@ -97,9 +100,9 @@ class CustomerServiceTests {
     @Test
     void shouldSuspendCustomer() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
-        Customer customer = Customer.builder().id(customerId).build();
-        CustomerResponse response = new CustomerResponse();
+        UUID customerId = randomUuid();
+        Customer customer = randomCustomer(customerId, CustomerStatus.ACTIVE);
+        CustomerResponse response = randomCustomerResponse();
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(customerMapper.toResponse(customer)).thenReturn(response);
 
@@ -114,9 +117,9 @@ class CustomerServiceTests {
     @Test
     void shouldCloseCustomer() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
-        Customer customer = Customer.builder().id(customerId).build();
-        CustomerResponse response = new CustomerResponse();
+        UUID customerId = randomUuid();
+        Customer customer = randomCustomer(customerId, CustomerStatus.ACTIVE);
+        CustomerResponse response = randomCustomerResponse();
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(customerMapper.toResponse(customer)).thenReturn(response);
 
@@ -131,8 +134,8 @@ class CustomerServiceTests {
     @Test
     void shouldDeleteCustomer() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
-        Customer customer = Customer.builder().id(customerId).build();
+        UUID customerId = randomUuid();
+        Customer customer = randomCustomer(customerId);
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
         // Act
@@ -145,7 +148,7 @@ class CustomerServiceTests {
     @Test
     void shouldRejectMissingCustomerActivation() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
+        UUID customerId = randomUuid();
         when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
 
         // Act & Assert

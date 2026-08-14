@@ -36,7 +36,7 @@ public class CustomerServiceImpl implements CustomerService {
             throw new CustomerAlreadyExistsException(request.getUserId());
         }
         Customer customer = customerMapper.toEntity(request);
-        customerRepository.save(customer);
+        customerRepository.saveAndFlush(customer);
         return customerMapper.toResponse(customer);
     }
 
@@ -53,6 +53,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponse updateCustomer(UUID customerId, CustomerUpdateRequest request) {
         Customer customer = loadCustomer(customerId);
         customerMapper.update(customer, request);
+        customerRepository.flush();
         return customerMapper.toResponse(customer);
     }
 
@@ -84,6 +85,7 @@ public class CustomerServiceImpl implements CustomerService {
     private CustomerResponse changeStatus(UUID customerId, CustomerStatus status) {
         Customer customer = loadCustomer(customerId);
         customer.setStatus(status);
+        customerRepository.flush();
         return customerMapper.toResponse(customer);
     }
 

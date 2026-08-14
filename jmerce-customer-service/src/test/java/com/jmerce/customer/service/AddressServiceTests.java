@@ -23,9 +23,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.jmerce.customer.util.RandomTestData.randomAddress;
+import static com.jmerce.customer.util.RandomTestData.randomAddressCreateRequest;
+import static com.jmerce.customer.util.RandomTestData.randomAddressResponse;
+import static com.jmerce.customer.util.RandomTestData.randomAddressUpdateRequest;
+import static com.jmerce.customer.util.RandomTestData.randomCustomerWithAddresses;
+import static com.jmerce.customer.util.RandomTestData.randomUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -46,12 +51,12 @@ class AddressServiceTests {
     @Test
     void shouldReplaceDefaultAddressWhenCreating() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
-        Address current = address(UUID.randomUUID(), AddressPurpose.SHIPPING, true);
-        Address replacement = address(null, AddressPurpose.SHIPPING, true);
-        Customer customer = customerWithAddresses(customerId, current);
-        AddressCreateRequest request = mock(AddressCreateRequest.class);
-        AddressResponse response = mock(AddressResponse.class);
+        UUID customerId = randomUuid();
+        Address current = randomAddress(randomUuid(), AddressPurpose.SHIPPING, true);
+        Address replacement = randomAddress(null, AddressPurpose.SHIPPING, true);
+        Customer customer = randomCustomerWithAddresses(customerId, current);
+        AddressCreateRequest request = randomAddressCreateRequest();
+        AddressResponse response = randomAddressResponse(customerId);
         when(customerRepository.findByIdForUpdate(customerId)).thenReturn(Optional.of(customer));
         when(addressMapper.toEntity(request)).thenReturn(replacement);
         when(addressMapper.toResponse(replacement)).thenReturn(response);
@@ -69,11 +74,11 @@ class AddressServiceTests {
     @Test
     void shouldCreateNonDefaultAddress() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
-        Address address = address(null, AddressPurpose.SHIPPING, false);
-        Customer customer = customerWithAddresses(customerId);
-        AddressCreateRequest request = mock(AddressCreateRequest.class);
-        AddressResponse response = mock(AddressResponse.class);
+        UUID customerId = randomUuid();
+        Address address = randomAddress(null, AddressPurpose.SHIPPING, false);
+        Customer customer = randomCustomerWithAddresses(customerId);
+        AddressCreateRequest request = randomAddressCreateRequest();
+        AddressResponse response = randomAddressResponse(customerId);
         when(customerRepository.findByIdForUpdate(customerId)).thenReturn(Optional.of(customer));
         when(addressMapper.toEntity(request)).thenReturn(address);
         when(addressMapper.toResponse(address)).thenReturn(response);
@@ -90,12 +95,12 @@ class AddressServiceTests {
     @Test
     void shouldPreserveDefaultWhenChangingAddressPurpose() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
-        Address address = address(UUID.randomUUID(), AddressPurpose.SHIPPING, true);
-        Address currentBilling = address(UUID.randomUUID(), AddressPurpose.BILLING, true);
-        Customer customer = customerWithAddresses(customerId, address, currentBilling);
-        AddressUpdateRequest request = mock(AddressUpdateRequest.class);
-        AddressResponse response = mock(AddressResponse.class);
+        UUID customerId = randomUuid();
+        Address address = randomAddress(randomUuid(), AddressPurpose.SHIPPING, true);
+        Address currentBilling = randomAddress(randomUuid(), AddressPurpose.BILLING, true);
+        Customer customer = randomCustomerWithAddresses(customerId, address, currentBilling);
+        AddressUpdateRequest request = randomAddressUpdateRequest();
+        AddressResponse response = randomAddressResponse(customerId);
         when(customerRepository.findByIdForUpdate(customerId)).thenReturn(Optional.of(customer));
         doAnswer(invocation -> {
             address.setPurpose(AddressPurpose.BILLING);
@@ -116,11 +121,11 @@ class AddressServiceTests {
     @Test
     void shouldUpdateNonDefaultAddress() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
-        Address address = address(UUID.randomUUID(), AddressPurpose.SHIPPING, false);
-        Customer customer = customerWithAddresses(customerId, address);
-        AddressUpdateRequest request = mock(AddressUpdateRequest.class);
-        AddressResponse response = mock(AddressResponse.class);
+        UUID customerId = randomUuid();
+        Address address = randomAddress(randomUuid(), AddressPurpose.SHIPPING, false);
+        Customer customer = randomCustomerWithAddresses(customerId, address);
+        AddressUpdateRequest request = randomAddressUpdateRequest();
+        AddressResponse response = randomAddressResponse(customerId);
         when(customerRepository.findByIdForUpdate(customerId)).thenReturn(Optional.of(customer));
         when(addressMapper.toResponse(address)).thenReturn(response);
 
@@ -136,11 +141,11 @@ class AddressServiceTests {
     @Test
     void shouldMakeAddressDefaultWithoutReplacement() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
-        Address address = address(UUID.randomUUID(), AddressPurpose.SHIPPING, false);
-        Address billing = address(UUID.randomUUID(), AddressPurpose.BILLING, true);
-        Customer customer = customerWithAddresses(customerId, address, billing);
-        AddressResponse response = mock(AddressResponse.class);
+        UUID customerId = randomUuid();
+        Address address = randomAddress(randomUuid(), AddressPurpose.SHIPPING, false);
+        Address billing = randomAddress(randomUuid(), AddressPurpose.BILLING, true);
+        Customer customer = randomCustomerWithAddresses(customerId, address, billing);
+        AddressResponse response = randomAddressResponse(customerId);
         when(customerRepository.findByIdForUpdate(customerId)).thenReturn(Optional.of(customer));
         when(addressMapper.toResponse(address)).thenReturn(response);
 
@@ -157,10 +162,10 @@ class AddressServiceTests {
     @Test
     void shouldNotWriteWhenAddressIsAlreadyDefault() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
-        Address address = address(UUID.randomUUID(), AddressPurpose.BILLING, true);
-        Customer customer = customerWithAddresses(customerId, address);
-        AddressResponse response = mock(AddressResponse.class);
+        UUID customerId = randomUuid();
+        Address address = randomAddress(randomUuid(), AddressPurpose.BILLING, true);
+        Customer customer = randomCustomerWithAddresses(customerId, address);
+        AddressResponse response = randomAddressResponse(customerId);
         when(customerRepository.findByIdForUpdate(customerId)).thenReturn(Optional.of(customer));
         when(addressMapper.toResponse(address)).thenReturn(response);
 
@@ -175,9 +180,9 @@ class AddressServiceTests {
     @Test
     void shouldDeleteAddress() {
         // Arrange
-        UUID customerId = UUID.randomUUID();
-        Address address = address(UUID.randomUUID(), AddressPurpose.SHIPPING, false);
-        Customer customer = customerWithAddresses(customerId, address);
+        UUID customerId = randomUuid();
+        Address address = randomAddress(randomUuid(), AddressPurpose.SHIPPING, false);
+        Customer customer = randomCustomerWithAddresses(customerId, address);
         when(customerRepository.findByIdForUpdate(customerId)).thenReturn(Optional.of(customer));
 
         // Act
@@ -187,22 +192,6 @@ class AddressServiceTests {
         assertThat(customer.getAddresses()).doesNotContain(address);
         assertThat(address.getCustomer()).isNull();
         verify(customerRepository).flush();
-    }
-
-    private Customer customerWithAddresses(UUID customerId, Address... addresses) {
-        Customer customer = Customer.builder().id(customerId).build();
-        for (Address address : addresses) {
-            customer.addAddress(address);
-        }
-        return customer;
-    }
-
-    private Address address(UUID addressId, AddressPurpose purpose, boolean isDefault) {
-        return Address.builder()
-            .id(addressId)
-            .purpose(purpose)
-            .isDefault(isDefault)
-            .build();
     }
 
 }
