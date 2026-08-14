@@ -1,0 +1,34 @@
+name: checkstyle
+'on':
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions: {}
+
+concurrency:
+  group: checkstyle-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  oracle:
+    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Checkstyle
+        uses: dbelyaev/action-checkstyle@203f0e85ad07e412c4f2b9bb4df1f9edfad9757f # v3.14.0
+        with:
+          checkstyle_config: sun_checks.xml
+          filter_mode: nofilter
+          level: error
+          fail_level: any
