@@ -19,6 +19,19 @@ services:
       timeout: 5s
       retries: 5
 
+  # Database Metrics
+
+  customer-postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.20.1
+    container_name: customer-postgres-exporter
+    depends_on:
+      customer-postgres:
+        condition: service_healthy
+    environment:
+      DATA_SOURCE_NAME: postgresql://postgres:postgres@customer-postgres:5432/postgres?sslmode=disable
+    ports:
+      - "9187:9187"
+
   # Microservices
 
   customer-service:
